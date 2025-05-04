@@ -51,8 +51,8 @@ pipeline {
                 sh '''
                     echo "[E2E Test Stage]"
 
-                    npm install -g serve
-                    serve -s build
+                    npm install serve
+                    npx serve -s build
                     npx playwright test
                 '''
             }
