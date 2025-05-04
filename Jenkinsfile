@@ -24,42 +24,46 @@ pipeline {
                 '''
             }
         }
-        stage('Test') {
-            agent {
-                docker {
-                    image 'node:18-alpine'
-                    reuseNode true
+        stage('Tests') {
+            parallel {
+                stage('Unit Test') {
+                    agent {
+                        docker {
+                            image 'node:18-alpine'
+                            reuseNode true
+                        }
+                    }
+                    steps {
+                        sh '''
+                            echo "[Unit Test Stage]"
+
+                            test -f build/index.html
+                            npm run test
+                        '''
+                    }
+                }
+                stage('E2E Test') {
+                    agent {
+                        docker {
+                            image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                            reuseNode true
+                        }
+                    }
+                    steps {
+                        sh '''
+                            echo "[E2E Test Stage]"
+
+                            npm install serve
+                            npx serve -s build &
+                            sleep 10
+                            npx playwright test --reporter=html
+                        '''
+                    }
                 }
             }
-            steps {
-                sh '''
-                    echo "[Test Stage]"
-
-                    test -f build/index.html
-                    npm run test
-                '''
-            }
         }
-        stage('E2E') {
-            agent {
-                docker {
-                    image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
-                    reuseNode true
-                }
-            }
-            steps {
-                sh '''
-                    echo "[E2E Test Stage]"
-
-                    npm install serve
-                    npx serve -s build &
-                    sleep 10
-                    npx playwright test --reporter=html
-                '''
-            }
-        }
+        
     }
-
     post {
         always {
             junit 'jest-results/junit.xml'
