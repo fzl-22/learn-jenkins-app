@@ -138,29 +138,7 @@ pipeline {
         //     }
         // }
 
-        stage('Deploy PRODUCTION') {
-            agent {
-                docker {
-                    image 'node:18-alpine'
-                    reuseNode true
-                }
-            }
-            steps {
-                sh '''
-                    echo "[Deploy Stage]"
-
-                    npm install netlify-cli
-                    npx netlify --version
-
-                    echo "Deploying to production. Site ID: $NETLIFY_SITE_ID"
-                    npx netlify status
-
-                    npx netlify deploy --dir=build --prod --no-build
-                '''
-            }
-        }
-
-        stage('Production E2E Test') {
+        stage('PRODUCTION DEPLOYMENT') {
             agent {
                 docker {
                     image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
@@ -172,7 +150,17 @@ pipeline {
             }
             steps {
                 sh '''
-                    echo "[E2E Test Stage]"
+                    node --version
+                    
+                    echo "[PRODUCTION DEPLOYMENT]"
+
+                    npm install netlify-cli
+                    npx netlify --version
+                    echo "Deploying to production. Site ID: $NETLIFY_SITE_ID"
+                    npx netlify status
+                    npx netlify deploy --dir=build --prod --no-build
+
+                    echo "[PRODUCTION E2E TESTING]"
 
                     npx playwright test --reporter=html
                 '''
