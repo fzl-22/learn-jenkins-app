@@ -99,9 +99,9 @@ pipeline {
                     npx netlify deploy --dir=build --no-build --json > deploy-output.json
                     npx node-jq -r '.deploy_url' deploy-output.json
                 '''
-            }
-            script {
-                env.STAGING_URL = sh(script: "npx node-jq -r '.deploy_url' deploy-output.json", returnStdOut: true)
+                script {
+                    env.STAGING_URL = sh(script: "npx node-jq -r '.deploy_url' deploy-output.json", returnStdOut: true)
+                }
             }
         }
 
