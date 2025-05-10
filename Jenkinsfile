@@ -8,6 +8,10 @@ pipeline {
     }
 
     stages {
+        stage('Docker') {
+            sh 'docker build -t jenkins-playwright-app .'
+        }
+
         stage('Build') {
             agent {
                 docker {
@@ -83,7 +87,7 @@ pipeline {
         stage('STAGING DEPLOYMENT') {
             agent {
                 docker {
-                    image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                    image 'jenkins-playwright-app'
                     reuseNode true
                 }
             }
@@ -91,12 +95,11 @@ pipeline {
                 sh '''
                     echo "[STAGING DEPLOYMENT]"
 
-                    npm install netlify-cli node-jq
-                    npx netlify --version
+                    netlify --version
                     echo "Deploying to staging. Site ID: $NETLIFY_SITE_ID"
-                    npx netlify status
-                    npx netlify deploy --dir=build --no-build --json > deploy-output.json
-                    export CI_ENVIRONMENT_URL=$(npx node-jq -r '.deploy_url' deploy-output.json)
+                    netlify status
+                    netlify deploy --dir=build --no-build --json > deploy-output.json
+                    export CI_ENVIRONMENT_URL=$(node-jq -r '.deploy_url' deploy-output.json)
 
                     echo "[STAGING E2E TESTING]"
 
@@ -121,7 +124,7 @@ pipeline {
         stage('PRODUCTION DEPLOYMENT') {
             agent {
                 docker {
-                    image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                    image 'jenkins-playwright-app'
                     reuseNode true
                 }
             }
@@ -134,11 +137,10 @@ pipeline {
 
                     echo "[PRODUCTION DEPLOYMENT]"
 
-                    npm install netlify-cli
-                    npx netlify --version
+                    netlify --version
                     echo "Deploying to production. Site ID: $NETLIFY_SITE_ID"
-                    npx netlify status
-                    npx netlify deploy --dir=build --prod --no-build
+                    netlify status
+                    netlify deploy --dir=build --prod --no-build
 
                     echo "[PRODUCTION E2E TESTING]"
 
