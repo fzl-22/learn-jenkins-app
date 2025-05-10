@@ -101,6 +101,14 @@ pipeline {
             }
         }
 
+        stage('Approval') {
+            steps {
+                timeout(time: 30, unit: 'MINUTES') {
+                    input 
+                }
+            }
+        }
+
         stage('Deploy PRODUCTION') {
             agent {
                 docker {
