@@ -101,7 +101,6 @@ pipeline {
                 '''
                 script {
                     env.STAGING_URL = sh(script: "npx node-jq -r '.deploy_url' deploy-output.json", returnStdout: true)
-                    echo "STAGING_URL: ${env.STAGING_URL}"
                 }
             }
         }
@@ -114,11 +113,11 @@ pipeline {
                 }
             }
             environment {
-                CI_ENVIRONMENT_URL = "${STAGING_URL}"
+                CI_ENVIRONMENT_URL = "${env.STAGING_URL}"
             }
             steps {
                 sh '''
-                    echo "[E2E Test Stage] at ${CI_ENVIRONMENT_URL}"
+                    echo "[E2E Test Stage]"
 
                     npx playwright test --reporter=html
                 '''
