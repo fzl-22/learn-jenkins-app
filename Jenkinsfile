@@ -9,7 +9,9 @@ pipeline {
 
     stages {
         stage('Docker') {
-            sh 'docker build -t jenkins-playwright-app .'
+            steps {
+                sh 'docker build -t jenkins-playwright-app .'
+            }
         }
 
         stage('Build') {
