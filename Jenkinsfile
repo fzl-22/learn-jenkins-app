@@ -80,45 +80,25 @@ pipeline {
             }
         }
 
-        stage('Deploy STAGING') {
-            agent {
-                docker {
-                    image 'node:18-alpine'
-                    reuseNode true
-                }
-            }
-            steps {
-                sh '''
-                    echo "[Deploy Stage]"
-
-                    npm install netlify-cli node-jq
-                    npx netlify --version
-
-                    echo "Deploying to staging. Site ID: $NETLIFY_SITE_ID"
-                    npx netlify status
-
-                    npx netlify deploy --dir=build --no-build --json > deploy-output.json
-                    npx node-jq -r '.deploy_url' deploy-output.json
-                '''
-                script {
-                    env.STAGING_URL = sh(script: "npx node-jq -r '.deploy_url' deploy-output.json", returnStdout: true)
-                }
-            }
-        }
-
-        stage('Staging E2E Test') {
+        stage('STAGING DEPLOYMENT') {
             agent {
                 docker {
                     image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
                     reuseNode true
                 }
             }
-            environment {
-                CI_ENVIRONMENT_URL = "${env.STAGING_URL}"
-            }
             steps {
                 sh '''
-                    echo "[E2E Test Stage]"
+                    echo "[STAGING DEPLOYMENT]"
+
+                    npm install netlify-cli node-jq
+                    npx netlify --version
+                    echo "Deploying to staging. Site ID: $NETLIFY_SITE_ID"
+                    npx netlify status
+                    npx netlify deploy --dir=build --no-build --json > deploy-output.json
+                    CI_ENVIRONMENT_URL=$(npx node-jq -r '.deploy_url' deploy-output.json)
+
+                    echo "[STAGING E2E TESTING]"
 
                     npx playwright test --reporter=html
                 '''
@@ -151,7 +131,7 @@ pipeline {
             steps {
                 sh '''
                     node --version
-                    
+
                     echo "[PRODUCTION DEPLOYMENT]"
 
                     npm install netlify-cli
